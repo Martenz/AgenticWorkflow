@@ -58,8 +58,13 @@ copy_file() {
         echo -e "  ${GREEN}✔${NC} Installed: $filename"
     elif ! cmp -s "$src" "$dest"; then
         echo -e "  ${YELLOW}!${NC} File exists with changes: $filename"
-        read -p "    Overwrite? [y/N] " -n 1 -r
-        echo
+        if [ -t 0 ]; then
+            read -p "    Overwrite? [y/N] " -n 1 -r
+            echo
+        else
+            # Non-interactive (e.g. curl | bash) — skip overwrite
+            REPLY="n"
+        fi
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             cp "$src" "$dest"
             echo -e "  ${GREEN}✔${NC} Updated: $filename"

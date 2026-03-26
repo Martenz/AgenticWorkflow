@@ -88,13 +88,18 @@ trap "rm -rf '$TMP_DIR'" EXIT
 if [ "$VERSION" = "latest" ]; then
     # Get latest release tag
     echo -e "${BLUE}▸ Fetching latest version...${NC}"
-    LATEST_TAG=$(curl -sI "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
+    LOCATION_HEADER=$(curl -sI "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
         | grep -i "^location:" \
-        | sed 's/.*tag\///' \
         | tr -d '\r\n')
     
+    # Only extract tag if the location URL actually contains /tag/
+    LATEST_TAG=""
+    if echo "$LOCATION_HEADER" | grep -q '/tag/'; then
+        LATEST_TAG=$(echo "$LOCATION_HEADER" | sed 's/.*tag\///')
+    fi
+    
     if [ -z "$LATEST_TAG" ]; then
-        # No releases yet, use main branch
+        # No releases yet, use master branch
         LATEST_TAG="master"
         echo -e "  ${YELLOW}○${NC} No releases found, using master branch"
     else
