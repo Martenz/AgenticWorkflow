@@ -245,6 +245,18 @@ ROADMAP_EOF
     echo -e "  ${GREEN}✔${NC} Created:   docs/roadmaps/example-roadmap.md"
 fi
 
+# Copy how-to guide (always overwrite to keep it current)
+HOWTO_SRC="$EXTRACTED_DIR/templates/agentic-workflow-how-to.md"
+HOWTO_DEST="$TARGET_DIR/agentic-workflow-how-to.md"
+if [ -f "$HOWTO_SRC" ]; then
+    cp "$HOWTO_SRC" "$HOWTO_DEST"
+    if [ "$IS_UPDATE" = true ]; then
+        echo -e "  ${GREEN}✔${NC} Updated:   agentic-workflow-how-to.md"
+    else
+        echo -e "  ${GREEN}✔${NC} Created:   agentic-workflow-how-to.md"
+    fi
+fi
+
 # Write version marker
 echo "$NEW_VERSION" > "$VERSION_MARKER"
 
