@@ -1,13 +1,13 @@
 #!/bin/bash
 #
 # Agentic Workflow Remote Installer
-# One-liner install: curl -sL <raw-url>/remote-install.sh | bash
+# One-liner install: curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash
 #
 # Usage:
-#   curl -sL <url>/remote-install.sh | bash                     # Latest, install to current dir
-#   curl -sL <url>/remote-install.sh | bash -s -- /path/to/proj # Latest, specific target
-#   curl -sL <url>/remote-install.sh | bash -s -- --version v1.2.0  # Specific version
-#   curl -sL <url>/remote-install.sh | bash -s -- --version v1.2.0 /path/to/proj
+#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash                     # Latest, install to current dir
+#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- /path/to/proj # Latest, specific target
+#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- --version v1.2.0  # Specific version
+#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- --version v1.2.0 /path/to/proj
 #
 
 set -e
@@ -20,8 +20,8 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Defaults
-REPO_OWNER="your-org"
-REPO_NAME="agentic-workflow"
+REPO_OWNER="Martenz"
+REPO_NAME="AgenticWorkflow"
 VERSION="latest"
 TARGET_DIR="."
 KEEP_LOCAL=true
@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "Usage: curl -sL <url>/remote-install.sh | bash -s -- [OPTIONS] [TARGET_DIR]"
+            echo "Usage: curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- [OPTIONS] [TARGET_DIR]"
             echo ""
             echo "Options:"
             echo "  --version, -v TAG    Install specific version (e.g., v1.0.0). Default: latest"
@@ -52,9 +52,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h           Show this help"
             echo ""
             echo "Examples:"
-            echo "  curl -sL <url>/remote-install.sh | bash"
-            echo "  curl -sL <url>/remote-install.sh | bash -s -- --version v1.0.0"
-            echo "  curl -sL <url>/remote-install.sh | bash -s -- /path/to/project"
+            echo "  curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash"
+            echo "  curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- --version v1.0.0"
+            echo "  curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- /path/to/project"
             exit 0
             ;;
         *)
@@ -180,4 +180,4 @@ echo -e "To update later:"
 echo -e "  ${BLUE}./agentic-workflow/update.sh${NC}"
 echo ""
 echo -e "Or reinstall remotely:"
-echo -e "  ${BLUE}curl -sL <url>/remote-install.sh | bash${NC}"
+echo -e "  ${BLUE}curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash${NC}"

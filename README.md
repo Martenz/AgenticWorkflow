@@ -10,23 +10,23 @@ A reusable template for AI-assisted development using a cascade of specialized V
 ### One-liner Install (Remote)
 
 ```bash
-curl -sL https://raw.githubusercontent.com/your-org/agentic-workflow/main/remote-install.sh | bash
+curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash
 ```
 
 Or with options:
 
 ```bash
 # Specific version
-curl -sL https://raw.githubusercontent.com/your-org/agentic-workflow/main/remote-install.sh | bash -s -- --version v1.0.0
+curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- --version v1.0.0
 
 # Into a specific project
-curl -sL https://raw.githubusercontent.com/your-org/agentic-workflow/main/remote-install.sh | bash -s -- /path/to/project
+curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/main/remote-install.sh | bash -s -- /path/to/project
 ```
 
 ### Git Submodule (Recommended for Teams)
 
 ```bash
-git submodule add https://github.com/your-org/agentic-workflow.git agentic-workflow
+git submodule add https://github.com/Martenz/AgenticWorkflow.git agentic-workflow
 ./agentic-workflow/install.sh
 ```
 
@@ -34,11 +34,11 @@ git submodule add https://github.com/your-org/agentic-workflow.git agentic-workf
 
 ```bash
 # Clone and install
-git clone https://github.com/your-org/agentic-workflow.git
+git clone https://github.com/Martenz/AgenticWorkflow.git
 ./agentic-workflow/install.sh /path/to/your-project
 ```
 
-> **Note:** Replace `your-org` with your GitHub username or organization.
+
 
 ## Overview
 

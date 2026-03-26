@@ -23,8 +23,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION_FILE="$SCRIPT_DIR/VERSION"
 
 # Defaults
-REPO_OWNER="your-org"
-REPO_NAME="agentic-workflow"
+REPO_OWNER="Martenz"
+REPO_NAME="AgenticWorkflow"
 CHECK_ONLY=false
 TARGET_VERSION=""
 
