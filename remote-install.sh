@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Agentic Workflow Remote Installer
-# One-liner install: curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash
+# Agentic Workflow Remote Installer & Updater
+# Install:  curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash
+# Update:   (same command — detects existing install and updates agents)
 #
 # Usage:
-#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash                     # Latest, install to current dir
-#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- /path/to/proj # Latest, specific target
-#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- --version v1.2.0  # Specific version
-#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- --version v1.2.0 /path/to/proj
+#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash
+#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- /path/to/proj
+#   curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- --version v1.2.0
 #
 
 set -e
@@ -24,7 +24,6 @@ REPO_OWNER="Martenz"
 REPO_NAME="AgenticWorkflow"
 VERSION="latest"
 TARGET_DIR="."
-KEEP_LOCAL=true
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -38,17 +37,12 @@ while [[ $# -gt 0 ]]; do
             REPO_NAME="${2##*/}"
             shift 2
             ;;
-        --no-keep)
-            KEEP_LOCAL=false
-            shift
-            ;;
         --help|-h)
             echo "Usage: curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- [OPTIONS] [TARGET_DIR]"
             echo ""
             echo "Options:"
             echo "  --version, -v TAG    Install specific version (e.g., v1.0.0). Default: latest"
             echo "  --repo, -r OWNER/REPO  GitHub repository (default: $REPO_OWNER/$REPO_NAME)"
-            echo "  --no-keep            Don't keep agentic-workflow/ folder in project"
             echo "  --help, -h           Show this help"
             echo ""
             echo "Examples:"
@@ -71,9 +65,26 @@ if [ ! -d "$TARGET_DIR" ]; then
 fi
 TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
 
-echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║    Agentic Workflow Remote Installer       ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
+# Detect existing install
+VERSION_MARKER="$TARGET_DIR/.agentic-workflow-version"
+INSTALLED_VERSION=""
+IS_UPDATE=false
+if [ -f "$VERSION_MARKER" ]; then
+    INSTALLED_VERSION=$(cat "$VERSION_MARKER" | tr -d '[:space:]')
+    IS_UPDATE=true
+fi
+
+if [ "$IS_UPDATE" = true ]; then
+    echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║    Agentic Workflow Updater                ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "Installed: ${YELLOW}${INSTALLED_VERSION}${NC}"
+else
+    echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║    Agentic Workflow Remote Installer       ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
+fi
 echo ""
 echo -e "Repository: ${GREEN}${REPO_OWNER}/${REPO_NAME}${NC}"
 echo -e "Version:    ${GREEN}${VERSION}${NC}"
@@ -86,26 +97,24 @@ trap "rm -rf '$TMP_DIR'" EXIT
 
 # Determine download URL
 if [ "$VERSION" = "latest" ]; then
-    # Get latest release tag
     echo -e "${BLUE}▸ Fetching latest version...${NC}"
     LOCATION_HEADER=$(curl -sI "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
         | grep -i "^location:" \
         | tr -d '\r\n')
-    
+
     # Only extract tag if the location URL actually contains /tag/
     LATEST_TAG=""
     if echo "$LOCATION_HEADER" | grep -q '/tag/'; then
         LATEST_TAG=$(echo "$LOCATION_HEADER" | sed 's/.*tag\///')
     fi
-    
+
     if [ -z "$LATEST_TAG" ]; then
-        # No releases yet, use master branch
         LATEST_TAG="master"
         echo -e "  ${YELLOW}○${NC} No releases found, using master branch"
     else
         echo -e "  ${GREEN}✔${NC} Latest version: $LATEST_TAG"
     fi
-    
+
     DOWNLOAD_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/master.tar.gz"
     if [ "$LATEST_TAG" != "master" ]; then
         DOWNLOAD_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/tags/${LATEST_TAG}.tar.gz"
@@ -130,8 +139,6 @@ echo -e "  ${GREEN}✔${NC} Downloaded"
 # Extract
 echo -e "${BLUE}▸ Extracting...${NC}"
 tar xzf "$TMP_DIR/archive.tar.gz" -C "$TMP_DIR"
-
-# Find extracted directory (name varies by tag)
 EXTRACTED_DIR=$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d | head -1)
 
 if [ -z "$EXTRACTED_DIR" ]; then
@@ -140,49 +147,134 @@ if [ -z "$EXTRACTED_DIR" ]; then
 fi
 echo -e "  ${GREEN}✔${NC} Extracted"
 
-# Run install.sh
-echo ""
-"$EXTRACTED_DIR/install.sh" "$TARGET_DIR"
+# Read new version from extracted archive
+NEW_VERSION="unknown"
+if [ -f "$EXTRACTED_DIR/VERSION" ]; then
+    NEW_VERSION=$(cat "$EXTRACTED_DIR/VERSION" | tr -d '[:space:]')
+fi
 
-# Optionally keep agentic-workflow folder
-if [ "$KEEP_LOCAL" = true ]; then
+# Check if update is needed
+if [ "$IS_UPDATE" = true ] && [ "$INSTALLED_VERSION" = "$NEW_VERSION" ] && [ "$LATEST_TAG" != "master" ]; then
     echo ""
-    echo -e "${BLUE}▸ Saving agentic-workflow/ locally...${NC}"
-    
-    if [ -d "$TARGET_DIR/agentic-workflow" ]; then
-        # Check version
-        INSTALLED_VERSION=""
-        if [ -f "$TARGET_DIR/agentic-workflow/VERSION" ]; then
-            INSTALLED_VERSION=$(cat "$TARGET_DIR/agentic-workflow/VERSION" | tr -d '[:space:]')
-        fi
-        NEW_VERSION=""
-        if [ -f "$EXTRACTED_DIR/VERSION" ]; then
-            NEW_VERSION=$(cat "$EXTRACTED_DIR/VERSION" | tr -d '[:space:]')
-        fi
-        
-        if [ "$INSTALLED_VERSION" = "$NEW_VERSION" ]; then
-            echo -e "  ${YELLOW}○${NC} Already at version $NEW_VERSION"
-        else
-            echo -e "  ${GREEN}✔${NC} Updating: $INSTALLED_VERSION → $NEW_VERSION"
-            rm -rf "$TARGET_DIR/agentic-workflow"
-            cp -r "$EXTRACTED_DIR" "$TARGET_DIR/agentic-workflow"
-        fi
+    echo -e "${YELLOW}Already at version ${NEW_VERSION}. Nothing to do.${NC}"
+    exit 0
+fi
+
+# --- Install / Update files directly ---
+
+echo ""
+echo -e "${BLUE}▸ Creating folder structure...${NC}"
+
+for dir in ".github/agents" "docs" "docs/docs" "docs/plans" "docs/roadmaps" "tests/e2e"; do
+    if [ ! -d "$TARGET_DIR/$dir" ]; then
+        mkdir -p "$TARGET_DIR/$dir"
+        echo -e "  ${GREEN}✔${NC} Created: $dir/"
     else
-        cp -r "$EXTRACTED_DIR" "$TARGET_DIR/agentic-workflow"
-        echo -e "  ${GREEN}✔${NC} Saved to agentic-workflow/"
+        echo -e "  ${YELLOW}○${NC} Exists:  $dir/"
+    fi
+done
+
+echo ""
+echo -e "${BLUE}▸ Installing agents...${NC}"
+
+for agent_file in "$EXTRACTED_DIR"/agents/*.agent.md; do
+    [ -f "$agent_file" ] || continue
+    filename=$(basename "$agent_file")
+    dest="$TARGET_DIR/.github/agents/$filename"
+    if [ ! -f "$dest" ]; then
+        cp "$agent_file" "$dest"
+        echo -e "  ${GREEN}✔${NC} Installed: $filename"
+    elif ! cmp -s "$agent_file" "$dest"; then
+        cp "$agent_file" "$dest"
+        echo -e "  ${GREEN}✔${NC} Updated:   $filename"
+    else
+        echo -e "  ${YELLOW}○${NC} Up to date: $filename"
+    fi
+done
+
+echo ""
+echo -e "${BLUE}▸ Installing templates...${NC}"
+
+# Copy roadmap readme (only on fresh install)
+if [ -f "$EXTRACTED_DIR/templates/readme_roadmap.md" ]; then
+    dest="$TARGET_DIR/docs/docs/readme_roadmap.md"
+    if [ ! -f "$dest" ]; then
+        cp "$EXTRACTED_DIR/templates/readme_roadmap.md" "$dest"
+        echo -e "  ${GREEN}✔${NC} Installed: docs/docs/readme_roadmap.md"
+    else
+        echo -e "  ${YELLOW}○${NC} Exists:    docs/docs/readme_roadmap.md"
     fi
 fi
 
+# Create sample roadmap only on fresh install into empty folder
+if [ -z "$(ls -A "$TARGET_DIR/docs/roadmaps" 2>/dev/null)" ]; then
+    cat > "$TARGET_DIR/docs/roadmaps/example-roadmap.md" << 'ROADMAP_EOF'
+# Example Roadmap
+
+This is a sample roadmap. Replace with your actual development roadmap.
+
+## Feature: User Authentication
+
+### Objectives
+- Implement secure user login
+- Add password reset functionality
+- Support OAuth providers
+
+### Requirements
+- JWT token-based authentication
+- Password hashing with bcrypt
+- Rate limiting on auth endpoints
+
+### Milestones
+1. Basic login/logout
+2. Password reset flow
+3. OAuth integration
+
+---
+
+To use this roadmap:
+```
+@plan-orchestrator Run workflow from docs/roadmaps/example-roadmap.md
+```
+
+Or generate a plan first:
+```
+@plan-generator Create plan from docs/roadmaps/example-roadmap.md
+```
+ROADMAP_EOF
+    echo -e "  ${GREEN}✔${NC} Created:   docs/roadmaps/example-roadmap.md"
+fi
+
+# Write version marker
+echo "$NEW_VERSION" > "$VERSION_MARKER"
+
 echo ""
-echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║    Remote Install Complete! ✔              ║${NC}"
-echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+if [ "$IS_UPDATE" = true ]; then
+    echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${GREEN}║    Update Complete! ✔                      ║${NC}"
+    echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "Updated: ${YELLOW}${INSTALLED_VERSION}${NC} → ${GREEN}${NEW_VERSION}${NC}"
+else
+    echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${GREEN}║    Installation Complete! ✔                ║${NC}"
+    echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "Installed agents:"
+    echo -e "  • ${BLUE}@plan-orchestrator${NC} - Autonomous full workflow"
+    echo -e "  • ${BLUE}@plan-generator${NC}    - Create plans from roadmaps"
+    echo -e "  • ${BLUE}@plan-implementer${NC}  - Implement plan steps"
+    echo -e "  • ${BLUE}@plan-tester${NC}       - Unit tests & code quality"
+    echo -e "  • ${BLUE}@plan-validator${NC}    - E2E tests"
+    echo -e "  • ${BLUE}@plan-documenter${NC}   - Documentation"
+    echo ""
+    echo -e "Get started:"
+    echo -e "  1. Add your roadmap to ${YELLOW}docs/roadmaps/${NC}"
+    echo -e "  2. Run: ${GREEN}@plan-orchestrator Run workflow from docs/roadmaps/your-roadmap.md${NC}"
+fi
 echo ""
-echo -e "Version: ${GREEN}${LATEST_TAG}${NC}"
+echo -e "Version: ${GREEN}${NEW_VERSION}${NC}"
 echo -e "Target:  ${GREEN}${TARGET_DIR}${NC}"
 echo ""
-echo -e "To update later:"
-echo -e "  ${BLUE}./agentic-workflow/update.sh${NC}"
-echo ""
-echo -e "Or reinstall remotely:"
+echo -e "To update later, run the same command:"
 echo -e "  ${BLUE}curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash${NC}"

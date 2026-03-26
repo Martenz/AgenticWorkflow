@@ -7,33 +7,34 @@ A reusable template for AI-assisted development using a cascade of specialized V
 
 ## Quick Start
 
-### One-liner Install (Remote)
+### One-liner Install (Recommended)
 
 ```bash
 curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash
 ```
 
-Or with options:
+Re-run the same command to **update** agents to the latest version.
+
+With options:
 
 ```bash
-# Specific version
-curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- --version v1.0.0
-
 # Into a specific project
 curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- /path/to/project
+
+# Specific version
+curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash -s -- --version v1.0.0
 ```
 
-### Git Submodule (Recommended for Teams)
+### Git Submodule (For Teams)
 
 ```bash
 git submodule add https://github.com/Martenz/AgenticWorkflow.git agentic-workflow
 ./agentic-workflow/install.sh
 ```
 
-### Local Install
+### Local Clone
 
 ```bash
-# Clone and install
 git clone https://github.com/Martenz/AgenticWorkflow.git
 ./agentic-workflow/install.sh /path/to/your-project
 ```
@@ -92,8 +93,9 @@ After installation:
 
 ```
 your-project/
+├── .agentic-workflow-version  # Version marker (auto-generated)
 ├── .github/
-│   └── agents/           # Agent definitions
+│   └── agents/                # Agent definitions
 │       ├── plan-orchestrator.agent.md
 │       ├── plan-generator.agent.md
 │       ├── plan-implementer.agent.md
@@ -139,21 +141,16 @@ Draft → Ready for Implementation → VALIDATED → DOCUMENTED ✅
 
 ## Updating
 
+For curl installs, re-run the install command — it detects the existing version and updates agents:
+
 ```bash
-# Check for updates
-./agentic-workflow/update.sh --check
-
-# Update to latest
-./agentic-workflow/update.sh
-
-# Update to specific version
-./agentic-workflow/update.sh --version v2.0.0
+curl -sL https://raw.githubusercontent.com/Martenz/AgenticWorkflow/master/remote-install.sh | bash
 ```
 
-If installed as a submodule:
+For submodule installs:
 
 ```bash
-cd agentic-workflow && git pull origin main && cd ..
+cd agentic-workflow && git pull origin master && cd ..
 ./agentic-workflow/install.sh
 ```
 
@@ -182,10 +179,9 @@ agentic-workflow/
 ├── templates/             # Project scaffolding templates
 │   ├── docs-readme.md
 │   └── readme_roadmap.md
-├── install.sh             # Local installer
+├── install.sh             # Local installer (for clone/submodule)
 ├── uninstall.sh           # Clean removal
-├── update.sh              # Version updater
-├── remote-install.sh      # Curl one-liner installer
+├── remote-install.sh      # Curl one-liner installer & updater
 ├── VERSION                # Current semver
 ├── LICENSE
 └── README.md
