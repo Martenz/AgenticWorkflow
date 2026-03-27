@@ -36,13 +36,15 @@ AGENTS=(
 
 # Confirm uninstall
 echo -e "${YELLOW}This will remove:${NC}"
-echo -e "  • Agent files from .github/agents/"
+echo -e "  • Agent files from .github/agents/ (plan + task agents)"
 echo -e "  • docs/README.md (workflow documentation)"
 echo -e "  • docs/docs/readme_roadmap.md"
+echo -e "  • Example task files from tasks/"
 echo ""
 echo -e "${YELLOW}This will NOT remove:${NC}"
 echo -e "  • docs/plans/ (your generated plans)"
 echo -e "  • docs/roadmaps/ (your roadmaps)"
+echo -e "  • tasks/ (your custom task descriptions)"
 echo -e "  • tests/e2e/ (generated tests)"
 echo -e "  • Any implemented code"
 echo ""
@@ -65,6 +67,18 @@ for agent in "${AGENTS[@]}"; do
         echo -e "  ${RED}✗${NC} Removed: $agent"
     else
         echo -e "  ${YELLOW}○${NC} Not found: $agent"
+    fi
+done
+
+# Remove task agent files
+echo ""
+echo -e "${BLUE}▸ Removing task agent files...${NC}"
+
+for task_agent in "$TARGET_DIR"/.github/agents/task-agent-*.agent.md; do
+    if [ -f "$task_agent" ]; then
+        filename=$(basename "$task_agent")
+        rm "$task_agent"
+        echo -e "  ${RED}✗${NC} Removed: $filename"
     fi
 done
 
@@ -114,11 +128,25 @@ if [ -f "$TARGET_DIR/docs/roadmaps/example-roadmap.md" ]; then
     fi
 fi
 
+# Remove example task files (only if unchanged)
+if [ -f "$TARGET_DIR/tasks/example-task.md" ]; then
+    if grep -q "This is a sample task description" "$TARGET_DIR/tasks/example-task.md" 2>/dev/null; then
+        rm "$TARGET_DIR/tasks/example-task.md"
+        echo -e "  ${RED}✗${NC} Removed: tasks/example-task.md"
+    fi
+fi
+if [ -f "$TARGET_DIR/tasks/example-task-map-builder.md" ]; then
+    if grep -q "This is an example task description" "$TARGET_DIR/tasks/example-task-map-builder.md" 2>/dev/null; then
+        rm "$TARGET_DIR/tasks/example-task-map-builder.md"
+        echo -e "  ${RED}✗${NC} Removed: tasks/example-task-map-builder.md"
+    fi
+fi
+
 # Clean up empty directories
 echo ""
 echo -e "${BLUE}▸ Cleaning up empty directories...${NC}"
 
-for dir in "docs/docs" "docs/plans" "docs/roadmaps" "tests/e2e" "tests" "docs"; do
+for dir in "tasks" "docs/docs" "docs/plans" "docs/roadmaps" "tests/e2e" "tests" "docs"; do
     full_path="$TARGET_DIR/$dir"
     if [ -d "$full_path" ] && [ -z "$(ls -A "$full_path")" ]; then
         rmdir "$full_path"

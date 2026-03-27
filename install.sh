@@ -90,6 +90,7 @@ create_dir "$TARGET_DIR/docs"
 create_dir "$TARGET_DIR/docs/docs"
 create_dir "$TARGET_DIR/docs/plans"
 create_dir "$TARGET_DIR/docs/roadmaps"
+create_dir "$TARGET_DIR/tasks"
 create_dir "$TARGET_DIR/tests/e2e"
 
 echo ""
@@ -99,6 +100,21 @@ echo -e "${BLUE}▸ Installing agents...${NC}"
 for agent_file in "$AGENTS_DIR"/*.agent.md; do
     if [ -f "$agent_file" ]; then
         copy_file "$agent_file" "$TARGET_DIR/.github/agents/$(basename "$agent_file")"
+    fi
+done
+
+echo ""
+echo -e "${BLUE}▸ Installing task agents...${NC}"
+
+# Copy task agent files from subdirectories
+for task_dir in "$AGENTS_DIR"/task-agent-*/; do
+    if [ -d "$task_dir" ]; then
+        task_name=$(basename "$task_dir")
+        for agent_file in "$task_dir"*.agent.md; do
+            if [ -f "$agent_file" ]; then
+                copy_file "$agent_file" "$TARGET_DIR/.github/agents/$(basename "$agent_file")"
+            fi
+        done
     fi
 done
 
@@ -154,6 +170,18 @@ EOF
     echo -e "  ${GREEN}✔${NC} Created: docs/roadmaps/example-roadmap.md"
 fi
 
+# Copy example task files if tasks folder is empty
+if [ -z "$(ls -A "$TARGET_DIR/tasks" 2>/dev/null)" ]; then
+    if [ -f "$TEMPLATES_DIR/example-task.md" ]; then
+        cp "$TEMPLATES_DIR/example-task.md" "$TARGET_DIR/tasks/example-task.md"
+        echo -e "  ${GREEN}✔${NC} Created: tasks/example-task.md"
+    fi
+    if [ -f "$TEMPLATES_DIR/example-task-map-builder.md" ]; then
+        cp "$TEMPLATES_DIR/example-task-map-builder.md" "$TARGET_DIR/tasks/example-task-map-builder.md"
+        echo -e "  ${GREEN}✔${NC} Created: tasks/example-task-map-builder.md"
+    fi
+fi
+
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║    Installation Complete! ✔                ║${NC}"
@@ -167,8 +195,17 @@ echo -e "  • ${BLUE}@plan-tester${NC}       - Unit tests & code quality"
 echo -e "  • ${BLUE}@plan-validator${NC}    - E2E tests"
 echo -e "  • ${BLUE}@plan-documenter${NC}   - Documentation"
 echo ""
+echo -e "Task agents:"
+for task_dir in "$AGENTS_DIR"/task-agent-*/; do
+    if [ -d "$task_dir" ]; then
+        task_name=$(basename "$task_dir")
+        echo -e "  • ${BLUE}@${task_name}${NC}"
+    fi
+done
+echo ""
 echo -e "Get started:"
 echo -e "  1. Add your roadmap to ${YELLOW}docs/roadmaps/${NC}"
 echo -e "  2. Run: ${GREEN}@plan-orchestrator Run workflow from docs/roadmaps/your-roadmap.md${NC}"
+echo -e "  3. Or run a task agent: ${GREEN}@task-agent-map-builder Generate map from tasks/your-task.md${NC}"
 echo ""
-echo -e "Or see the example: ${YELLOW}docs/roadmaps/example-roadmap.md${NC}"
+echo -e "Or see examples: ${YELLOW}docs/roadmaps/example-roadmap.md${NC} | ${YELLOW}tasks/example-task-map-builder.md${NC}"

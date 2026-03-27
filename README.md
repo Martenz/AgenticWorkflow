@@ -76,6 +76,16 @@ Or run agents individually:
 @plan-documenter Document plan my-feature
 ```
 
+### Task Agents
+
+Run standalone task agents for specific jobs:
+
+```
+@task-agent-map-builder Generate map from tasks/my-map-task.md
+```
+
+Task agents read structured task descriptions from the `tasks/` folder and produce outputs independently. They can also be integrated into plan workflows.
+
 ## Agents
 
 | Agent | Purpose | Triggers |
@@ -86,6 +96,16 @@ Or run agents individually:
 | **plan-tester** | Unit tests, formatting, complexity | `test plan`, `check code quality` |
 | **plan-validator** | E2E tests, workflow validation | `e2e test`, `validate feature` |
 | **plan-documenter** | Code docs, roadmap summary | `document code`, `add docstrings` |
+
+### Task Agents
+
+Standalone agents for specific tasks. Can run independently or be composed with plan agents.
+
+| Agent | Purpose | Triggers |
+|-------|---------|----------|
+| **task-agent-map-builder** | Interactive map HTML from local geodata | `map visualization`, `map builder`, `interactive map`, `maplibre` |
+
+Task agent documentation: see `agents/task-agent-<name>/readme.md` in the repository.
 
 ## Folder Structure
 
@@ -101,13 +121,17 @@ your-project/
 │       ├── plan-implementer.agent.md
 │       ├── plan-tester.agent.md
 │       ├── plan-validator.agent.md
-│       └── plan-documenter.agent.md
+│       ├── plan-documenter.agent.md
+│       └── task-agent-map-builder.agent.md
 ├── docs/
 │   ├── README.md         # Workflow documentation
 │   ├── docs/
 │   │   └── readme_roadmap.md  # Implemented features log
 │   ├── plans/            # Generated plan documents
 │   └── roadmaps/         # Your input roadmaps
+├── tasks/                 # Task descriptions for task agents
+│   ├── example-task.md
+│   └── example-task-map-builder.md
 └── tests/
     └── e2e/              # Generated E2E tests
 ```
@@ -175,10 +199,15 @@ agentic-workflow/
 │   ├── plan-implementer.agent.md
 │   ├── plan-tester.agent.md
 │   ├── plan-validator.agent.md
-│   └── plan-documenter.agent.md
+│   ├── plan-documenter.agent.md
+│   └── task-agent-map-builder/    # Task agent: map builder
+│       ├── task-agent-map-builder.agent.md
+│       └── readme.md
 ├── templates/             # Project scaffolding templates
 │   ├── docs-readme.md
-│   └── readme_roadmap.md
+│   ├── readme_roadmap.md
+│   ├── example-task.md
+│   └── example-task-map-builder.md
 ├── install.sh             # Local installer (for clone/submodule)
 ├── uninstall.sh           # Clean removal
 ├── remote-install.sh      # Curl one-liner installer & updater
@@ -195,6 +224,10 @@ After `install.sh` runs in your project:
 
 Create new agents in `agents/` following the pattern:
 
+#### Plan Agents
+
+Place directly in `agents/`:
+
 ```yaml
 ---
 description: "Use when: {triggers}. Triggers: {keywords}."
@@ -210,6 +243,16 @@ You are a {Role}. Your job is to {purpose}.
 1. Step one
 2. Step two
 ```
+
+#### Task Agents
+
+Create a subfolder `agents/task-agent-<name>/` with:
+- `task-agent-<name>.agent.md` — agent definition
+- `readme.md` — usage documentation
+
+Optionally add a task template in `templates/example-task-<name>.md`.
+
+Task agents are installed to `.github/agents/` alongside plan agents and read task descriptions from `tasks/`.
 
 ### Modifying Templates
 

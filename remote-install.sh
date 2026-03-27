@@ -165,7 +165,7 @@ fi
 echo ""
 echo -e "${BLUE}▸ Creating folder structure...${NC}"
 
-for dir in ".github/agents" "docs" "docs/docs" "docs/plans" "docs/roadmaps" "tests/e2e"; do
+for dir in ".github/agents" "docs" "docs/docs" "docs/plans" "docs/roadmaps" "tasks" "tests/e2e"; do
     if [ ! -d "$TARGET_DIR/$dir" ]; then
         mkdir -p "$TARGET_DIR/$dir"
         echo -e "  ${GREEN}✔${NC} Created: $dir/"
@@ -190,6 +190,27 @@ for agent_file in "$EXTRACTED_DIR"/agents/*.agent.md; do
     else
         echo -e "  ${YELLOW}○${NC} Up to date: $filename"
     fi
+done
+
+echo ""
+echo -e "${BLUE}▸ Installing task agents...${NC}"
+
+for task_dir in "$EXTRACTED_DIR"/agents/task-agent-*/; do
+    [ -d "$task_dir" ] || continue
+    for agent_file in "$task_dir"*.agent.md; do
+        [ -f "$agent_file" ] || continue
+        filename=$(basename "$agent_file")
+        dest="$TARGET_DIR/.github/agents/$filename"
+        if [ ! -f "$dest" ]; then
+            cp "$agent_file" "$dest"
+            echo -e "  ${GREEN}✔${NC} Installed: $filename"
+        elif ! cmp -s "$agent_file" "$dest"; then
+            cp "$agent_file" "$dest"
+            echo -e "  ${GREEN}✔${NC} Updated:   $filename"
+        else
+            echo -e "  ${YELLOW}○${NC} Up to date: $filename"
+        fi
+    done
 done
 
 echo ""
@@ -245,6 +266,16 @@ ROADMAP_EOF
     echo -e "  ${GREEN}✔${NC} Created:   docs/roadmaps/example-roadmap.md"
 fi
 
+# Copy example task files if tasks folder is empty
+if [ -z "$(ls -A "$TARGET_DIR/tasks" 2>/dev/null)" ]; then
+    for task_template in "$EXTRACTED_DIR"/templates/example-task*.md; do
+        [ -f "$task_template" ] || continue
+        tpl_name=$(basename "$task_template")
+        cp "$task_template" "$TARGET_DIR/tasks/$tpl_name"
+        echo -e "  ${GREEN}✔${NC} Created:   tasks/$tpl_name"
+    done
+fi
+
 # Copy how-to guide (always overwrite to keep it current)
 HOWTO_SRC="$EXTRACTED_DIR/templates/agentic-workflow-how-to.md"
 HOWTO_DEST="$TARGET_DIR/agentic-workflow-how-to.md"
@@ -280,9 +311,17 @@ else
     echo -e "  • ${BLUE}@plan-validator${NC}    - E2E tests"
     echo -e "  • ${BLUE}@plan-documenter${NC}   - Documentation"
     echo ""
+    echo -e "Task agents:"
+    for task_dir in "$EXTRACTED_DIR"/agents/task-agent-*/; do
+        [ -d "$task_dir" ] || continue
+        task_name=$(basename "$task_dir")
+        echo -e "  • ${BLUE}@${task_name}${NC}"
+    done
+    echo ""
     echo -e "Get started:"
     echo -e "  1. Add your roadmap to ${YELLOW}docs/roadmaps/${NC}"
     echo -e "  2. Run: ${GREEN}@plan-orchestrator Run workflow from docs/roadmaps/your-roadmap.md${NC}"
+    echo -e "  3. Or run a task agent: ${GREEN}@task-agent-map-builder Generate map from tasks/your-task.md${NC}"
 fi
 echo ""
 echo -e "Version: ${GREEN}${NEW_VERSION}${NC}"
