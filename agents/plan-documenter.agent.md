@@ -12,13 +12,72 @@ You are a Plan Documenter. Your job is to ensure all code is properly documented
 
 ## Approach
 1. **Load the Plan**: Read the specified plan from `docs/plans/`
-2. **Identify Implemented Files**: Find all files created/modified during implementation
-3. **Analyze Documentation Gaps**: Check for missing docstrings, comments, type hints
-4. **Apply Documentation**: Add documentation following best practices
-5. **Review Plan Docs**: Ensure plan documentation is complete and accurate
-6. **Generate API Docs**: Create/update API documentation if applicable
-7. **Update Roadmap Docs**: Append completed features to `docs/docs/readme_roadmap.md`
-8. **Update Plan**: Mark as `DOCUMENTED` and add documentation report
+2. **Verify Step Flags**: Cross-reference every step in the plan against actual implementation — update flags (see Step Flag Verification below)
+3. **Identify Implemented Files**: Find all files created/modified during implementation
+4. **Analyze Documentation Gaps**: Check for missing docstrings, comments, type hints
+5. **Apply Documentation**: Add documentation following best practices
+6. **Review Plan Docs**: Ensure plan documentation is complete and accurate
+7. **Generate API Docs**: Create/update API documentation if applicable
+8. **Update Roadmap Docs**: Append completed features to `docs/docs/readme_roadmap.md`
+9. **Update Plan**: Mark as `DOCUMENTED` and add documentation report
+
+## Step Flag Verification
+
+Before documenting code, scan the plan document and verify every step's actual status against the codebase.
+
+### Rules
+
+1. **Read the Implementation Summary table** in the plan document
+2. **For each step**, check whether the described work exists in the codebase:
+   - Files created/modified as expected
+   - Functions, classes, endpoints, or components present
+   - Tests passing (check `VERIFIED` flags from tester/validator)
+3. **Update the Status Flag column** in the Implementation Summary table:
+   - `NOT_STARTED` → leave as-is if no evidence of implementation
+   - `IN_PROGRESS` / `REVIEW` / `VERIFIED` → set to `VERIFIED` if code + tests confirmed
+   - Already `VERIFIED` → leave as-is
+4. **Update Acceptance Criteria checkboxes** in the Development Details sections:
+   - `- [ ] {criterion}` → `- [✅] {criterion}` when the criterion is met
+   - Leave `- [ ]` unchanged if the criterion is NOT met
+5. **Never downgrade** a flag that was set by `@plan-tester` or `@plan-validator` unless evidence shows regression
+
+### Checkbox Update Pattern
+
+In the plan document, find lines matching:
+```
+- [ ] {Acceptance Criterion text}
+```
+
+For each, verify against the codebase. If satisfied, replace with:
+```
+- [✅] {Acceptance Criterion text}
+```
+
+### Implementation Summary Update Pattern
+
+In the Implementation Summary table, update the Status Flag column:
+```
+| 1.1 | Create auth module | High | `NOT_STARTED` | |
+```
+becomes (if implemented and verified):
+```
+| 1.1 | Create auth module | High | `VERIFIED` | Documented by @plan-documenter |
+```
+
+### Flag Verification Report
+
+After scanning, add a summary to the Documentation Report:
+```markdown
+### Step Flag Verification
+
+| Step | Previous Status | Updated Status | Evidence |
+|------|----------------|----------------|----------|
+| 1.1  | `NOT_STARTED`  | `VERIFIED`     | src/auth.py exists, tests pass |
+| 1.2  | `IN_PROGRESS`  | `VERIFIED`     | src/utils.ts complete |
+| 2.1  | `NOT_STARTED`  | `NOT_STARTED`  | No implementation found |
+
+Acceptance Criteria: 8/10 verified ✅, 2 remaining [ ]
+```
 
 ## Language-Specific Best Practices
 
@@ -220,6 +279,8 @@ For each file, verify:
 
 Check the plan document for:
 
+- [ ] Step flags match actual implementation state
+- [ ] Acceptance criteria checkboxes updated (`[ ]` → `[✅]`)
 - [ ] Overview section is accurate post-implementation
 - [ ] Objectives match what was delivered
 - [ ] Acceptance criteria are verifiable
@@ -259,8 +320,18 @@ Add this section to the plan:
 - {file}: Added type hints throughout
 - {file}: Added usage examples
 
+### Step Flag Verification
+
+| Step | Previous Status | Updated Status | Evidence |
+|------|----------------|----------------|----------|
+| {step} | `{old}` | `{new}` | {evidence} |
+
+Acceptance Criteria: {N}/{total} verified ✅
+
 ### Plan Documentation
 
+- [x] Step flags verified and updated
+- [x] Acceptance criteria checkboxes updated
 - [x] Overview verified accurate
 - [x] Objectives match implementation
 - [x] Changelog complete
@@ -289,12 +360,13 @@ Add this section to the plan:
 ```
 
 1. Receives validated plans with `VALIDATED` status
-2. Scans all implemented files for documentation gaps
-3. Adds documentation following language best practices
-4. Reviews and updates plan documentation
-5. Generates API docs if applicable
-6. **Appends completed features to `docs/docs/readme_roadmap.md`**
-7. Marks plan as `DOCUMENTED` - workflow complete
+2. **Verifies step flags** — cross-references every step against the codebase, updates `[ ]` → `[✅]` and status flags in the Implementation Summary
+3. Scans all implemented files for documentation gaps
+4. Adds documentation following language best practices
+5. Reviews and updates plan documentation
+6. Generates API docs if applicable
+7. **Appends completed features to `docs/docs/readme_roadmap.md`**
+8. Marks plan as `DOCUMENTED` - workflow complete
 
 ## Roadmap Documentation
 
